@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 224 30% 6%;
+    --foreground: 215 20% 93%;
+
+    --card: 224 25% 10%;
+    --card-foreground: 215 20% 93%;
+
+    --popover: 224 25% 10%;
+    --popover-foreground: 215 20% 93%;
+
+    --primary: 234 62% 56%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 224 25% 14%;
+    --secondary-foreground: 215 20% 93%;
+
+    --muted: 224 25% 14%;
+    --muted-foreground: 215 14% 55%;
+
+    --accent: 224 25% 14%;
+    --accent-foreground: 215 20% 93%;
+
+    --success: 152 56% 48%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 56%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 224 25% 16%;
+    --input: 224 25% 16%;
+    --ring: 234 62% 56%;
+
+    --radius: 0.625rem;
+
+    --sidebar-background: 224 30% 5%;
+    --sidebar-foreground: 215 20% 80%;
+    --sidebar-primary: 234 62% 56%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 224 25% 10%;
+    --sidebar-accent-foreground: 215 20% 90%;
+    --sidebar-border: 224 25% 12%;
+    --sidebar-ring: 234 62% 56%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(234 62% 56%), hsl(260 60% 52%));
+    --gradient-hero: linear-gradient(160deg, hsl(224 30% 3%) 0%, hsl(234 40% 10%) 50%, hsl(224 30% 4%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(224 25% 10%) 0%, hsl(224 25% 12%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(152 56% 48%), hsl(160 50% 48%));
+
+    --shadow-sm: 0 1px 2px 0 hsl(224 30% 12% / 0.04);
+    --shadow-md: 0 4px 12px -2px hsl(224 30% 12% / 0.08);
+    --shadow-lg: 0 12px 32px -4px hsl(224 30% 12% / 0.12);
+    --shadow-glow: 0 0 40px -8px hsl(234 62% 56% / 0.3);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-primary);
+  }
+
+  .bg-hero {
+    background: var(--gradient-hero);
+  }
+
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .glass {
+    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+  }
+
+  .glass-dark {
+    background: hsl(224 25% 10% / 0.6);
+    @apply backdrop-blur-xl border border-border/30;
+  }
+}
