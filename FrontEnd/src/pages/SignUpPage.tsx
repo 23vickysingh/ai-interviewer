@@ -5,6 +5,7 @@ import { Sparkles, Mail, Lock, User, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { api } from "@/lib/api";
 
 export default function SignUpPage() {
   const [name, setName] = useState("");
@@ -12,9 +13,20 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/dashboard");
+    try {
+      await api.post("/auth/signup", {
+        email,
+        password,
+        full_name: name,
+      });
+      // Optionally sign in immediately or redirect to sign in
+      navigate("/auth/signin");
+    } catch (error: any) {
+      console.error("Signup failed:", error.message);
+      // You might want to show a toast message here
+    }
   };
 
   return (

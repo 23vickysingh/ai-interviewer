@@ -36,7 +36,7 @@ const App = () => (
           <Route path="/feedback/:id" element={<DashboardLayout />}>
             <Route index element={<FeedbackPage />} />
           </Route>
-          <Route path="/interview" element={<InterviewRoom />} />
+          <Route path="/interview/:id" element={<InterviewRoom />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

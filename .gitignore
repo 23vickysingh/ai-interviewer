@@ -1,0 +1,30 @@
+# Backend specific
+BackEnd/venv/
+BackEnd/.env
+**/__pycache__/
+*.py[cod]
+*$py.class
+BackEnd/.pytest_cache/
+BackEnd/.coverage
+BackEnd/htmlcov/
+
+# Frontend specific
+FrontEnd/node_modules/
+FrontEnd/dist/
+FrontEnd/dist-ssr/
+FrontEnd/.env
+FrontEnd/.env.local
+FrontEnd/.env.*.local
+FrontEnd/npm-debug.log*
+FrontEnd/yarn-debug.log*
+FrontEnd/yarn-error.log*
+FrontEnd/pnpm-debug.log*
+
+# General
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+temp/
+tmp/

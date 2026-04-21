@@ -1,8 +1,10 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mic, MicOff, SkipForward, PhoneOff, Code, MessageSquare, User } from "lucide-react";
+import { Mic, MicOff, SkipForward, PhoneOff, Code, MessageSquare, User, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { api } from "@/lib/api";
 
 function VoiceWave({ active }: { active: boolean }) {
   return (
@@ -19,23 +21,75 @@ function VoiceWave({ active }: { active: boolean }) {
 }
 
 export default function InterviewRoom() {
+  const { id: interview_id } = useParams();
   const [muted, setMuted] = useState(false);
   const [panel, setPanel] = useState<"transcript" | "code">("transcript");
   const [speaking, setSpeaking] = useState(true);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [userInput, setUserInput] = useState("");
+  const [interview, setInterview] = useState<any>(null);
   const navigate = useNavigate();
+  const socketRef = useRef<WebSocket | null>(null);
 
-  const mockTranscript = [
-    { speaker: "ai" as const, text: "Welcome! Let's begin with your experience. Can you walk me through a complex React project you've worked on recently?" },
-    { speaker: "user" as const, text: "Sure. I recently built a real-time collaboration tool using React, WebSockets, and CRDT for conflict resolution..." },
-    { speaker: "ai" as const, text: "Interesting. How did you handle state synchronization across multiple clients?" },
-  ];
+  useEffect(() => {
+    // 1. Fetch interview details
+    const fetchInterview = async () => {
+      try {
+        const data = await api.get<any>(`/interviews/${interview_id}`);
+        setInterview(data);
+      } catch (err) {
+        console.error("Failed to fetch interview:", err);
+      }
+    };
+    fetchInterview();
+
+    // 2. Connect to WebSocket
+    const wsUrl = `${import.meta.env.VITE_WS_URL}/ws/${interview_id}`;
+    const socket = new WebSocket(wsUrl);
+    socketRef.current = socket;
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.role === "ai") {
+        setMessages((prev) => [...prev, data]);
+        setSpeaking(true);
+      }
+    };
+
+    socket.onclose = () => console.log("WS closed");
+
+    return () => {
+      socket.close();
+    };
+  }, [interview_id]);
+
+  const sendMessage = () => {
+    if (!userInput.trim() || !socketRef.current) return;
+    
+    const msg = { content: userInput };
+    socketRef.current.send(JSON.stringify(msg));
+    
+    setMessages((prev) => [...prev, { role: "user", content: userInput }]);
+    setUserInput("");
+    setSpeaking(false);
+  };
+
+  const endInterview = async () => {
+    try {
+      await api.post(`/feedback/${interview_id}`);
+      navigate(`/feedback/${interview_id}`);
+    } catch (err) {
+      console.error("Failed to end interview:", err);
+      navigate(`/dashboard`);
+    }
+  };
 
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* Top bar */}
       <div className="h-12 border-b border-border flex items-center justify-between px-4 bg-card/50 backdrop-blur-sm shrink-0">
-        <span className="text-sm font-medium">Frontend React Interview · Senior</span>
-        <span className="text-xs text-muted-foreground">12:34 elapsed</span>
+        <span className="text-sm font-medium">{interview?.topic || "Interview"} · {interview?.difficulty}</span>
+        <span className="text-xs text-muted-foreground">{new Date(interview?.created_at).toLocaleTimeString()}</span>
       </div>
 
       {/* Main content */}
@@ -98,21 +152,20 @@ export default function InterviewRoom() {
           <div className="flex-1 overflow-auto p-4">
             {panel === "transcript" ? (
               <div className="space-y-4">
-                {mockTranscript.map((msg, i) => (
+                {messages.map((msg, i) => (
                   <motion.div
                     key={i}
-                    className={`flex gap-3 ${msg.speaker === "user" ? "flex-row-reverse" : ""}`}
+                    className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.15 }}
                   >
                     <div className={`h-7 w-7 rounded-full shrink-0 flex items-center justify-center text-xs font-medium
-                      ${msg.speaker === "ai" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
-                      {msg.speaker === "ai" ? "AI" : "You"}
+                      ${msg.role === "ai" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                      {msg.role === "ai" ? "AI" : "You"}
                     </div>
                     <div className={`rounded-xl px-3.5 py-2.5 text-sm max-w-[80%]
-                      ${msg.speaker === "ai" ? "bg-muted" : "bg-primary/10"}`}>
-                      {msg.text}
+                      ${msg.role === "ai" ? "bg-muted" : "bg-primary/10"}`}>
+                      {msg.content}
                     </div>
                   </motion.div>
                 ))}
@@ -130,6 +183,24 @@ export default function InterviewRoom() {
               </div>
             )}
           </div>
+
+          {/* User Input Area */}
+          <div className="p-4 border-t border-border bg-card/80">
+            <form 
+              onSubmit={(e) => { e.preventDefault(); sendMessage(); }}
+              className="flex gap-2"
+            >
+              <Input 
+                value={userInput} 
+                onChange={(e) => setUserInput(e.target.value)}
+                placeholder="Type your response..."
+                className="bg-background"
+              />
+              <Button type="submit" size="icon" className="shrink-0">
+                <Send className="h-4 w-4" />
+              </Button>
+            </form>
+          </div>
         </div>
       </div>
 
@@ -146,7 +217,7 @@ export default function InterviewRoom() {
         <Button variant="outline" size="sm" className="gap-2 rounded-full" onClick={() => setSpeaking(!speaking)}>
           <SkipForward className="h-4 w-4" /> Skip
         </Button>
-        <Button variant="destructive" size="sm" className="gap-2 rounded-full" onClick={() => navigate("/feedback/1")}>
+        <Button variant="destructive" size="sm" className="gap-2 rounded-full" onClick={endInterview}>
           <PhoneOff className="h-4 w-4" /> End Interview
         </Button>
       </div>

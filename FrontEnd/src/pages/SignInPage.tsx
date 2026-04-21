@@ -5,15 +5,26 @@ import { Sparkles, Mail, Lock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { api } from "@/lib/api";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/dashboard");
+    try {
+      const formData = new FormData();
+      formData.append("username", email);
+      formData.append("password", password);
+      
+      const response = await api.post<{ access_token: string }>("/auth/login", formData);
+      localStorage.setItem("token", response.access_token);
+      navigate("/dashboard");
+    } catch (error: any) {
+      console.error("Login failed:", error.message);
+    }
   };
 
   return (

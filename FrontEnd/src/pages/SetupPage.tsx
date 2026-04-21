@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { api } from "@/lib/api";
 import { motion } from "framer-motion";
 import { FileText, Code, Brain, MessageSquare, Mic, CheckCircle2, XCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,19 @@ export default function SetupPage() {
       await navigator.mediaDevices.getUserMedia({ audio: true });
       setMicOk(true);
     } catch { setMicOk(false); }
+  };
+
+  const startInterview = async () => {
+    if (!selectedTopic) return;
+    try {
+      const interview = await api.post<any>("/interviews/", {
+        topic: topics.find(t => t.id === selectedTopic)?.label || selectedTopic,
+        difficulty: levels[difficulty[0]],
+      });
+      navigate(`/interview/${interview.id}`);
+    } catch (error) {
+      console.error("Failed to start interview:", error);
+    }
   };
 
   const canStart = selectedTopic && micOk;
@@ -99,7 +113,7 @@ export default function SetupPage() {
         size="lg"
         className="w-full gap-2"
         disabled={!canStart}
-        onClick={() => navigate("/interview")}
+        onClick={startInterview}
       >
         Start Interview <ArrowRight className="h-4 w-4" />
       </Button>
